@@ -1,2 +1,0 @@
-# Spotin
-Smart Parking Intelligence
