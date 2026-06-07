@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpotIn — Smart Parking Intelligence · India</title>
+  <meta name="description" content="SpotIn: Full business plan for India's smart parking intelligence platform." />
+  <style>* { margin: 0; padding: 0; box-sizing: border-box; } body { background: #060c09; }</style>
+
+  <!-- React 18 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- Recharts -->
+  <script src="https://unpkg.com/recharts@2.12.0/umd/Recharts.js" crossorigin></script>
+  <!-- Babel (JSX transform in browser) -->
+  <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    /* ── Globals from CDN ─────────────────────────────────────────── */
+    const { useState } = React;
+    const {
+      AreaChart, Area, XAxis, YAxis, CartesianGrid,
+      Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+    } = Recharts;
+
+    /* ── SpotIn Component ─────────────────────────────────────────── */
+
+const C = {
+  bg:"#060c09",surface:"#0b1410",card:"#0f1b14",border:"#1b3024",borderHi:"#265038",
+  g:"#22c55e",gBri:"#4ade80",gDim:"#14532d",lime:"#bef264",amber:"#fbbf24",
+  ora:"#fb923c",blue:"#60a5fa",purple:"#a78bfa",red:"#f87171",
+  txt:"#ecfdf5",sub:"#bbf7d0",mut:"#6b9e82",dim:"#2d4a39",
+};
+
+const S = {
+  page:{background:C.bg,minHeight:"100vh",color:C.txt,fontFamily:"ui-monospace,'Cascadia Code','Courier New',monospace"},
+  hdr:{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"16px 28px",display:"flex",alignItems:"center",justifyContent:"space-between"},
+  nav:{background:C.surface,borderBottom:`1px solid ${C.border}`,display:"flex",overflowX:"auto"},
+  body:{padding:"24px",maxWidth:1040,margin:"0 auto"},
+  card:(accent)=>({background:C.card,border:`1px solid ${C.border}`,borderLeft:accent?`3px solid ${accent}`:undefined,borderRadius:8,padding:"20px 24px",marginBottom:14}),
+  h2:{fontSize:11,letterSpacing:2.5,color:C.mut,textTransform:"uppercase",marginBottom:16,fontWeight:500},
+  h3:{fontSize:14,fontWeight:600,color:C.sub,margin:"0 0 8px"},
+  num:(c)=>({fontSize:28,fontWeight:700,color:c||C.g,letterSpacing:-1,margin:"4px 0"}),
+  lbl:{fontSize:11,color:C.mut,letterSpacing:1,textTransform:"uppercase"},
+  p:{fontSize:13,color:C.mut,lineHeight:1.7},
+  pill:(c)=>({display:"inline-flex",alignItems:"center",background:c+"22",color:c,fontSize:11,padding:"3px 10px",borderRadius:20,fontWeight:600,letterSpacing:0.3,marginRight:6,marginBottom:6}),
+  g2:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14},
+  g3:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14,marginBottom:14},
+  sc:{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"16px 18px"},
+  row:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:`1px solid ${C.border}`},
+};
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const revData = [
+  {year:"Y1",rev:1.2,ebitda:-3.5,cities:1,ops:45,mau:0.01},
+  {year:"Y2",rev:8.5,ebitda:-2.2,cities:4,ops:380,mau:0.18},
+  {year:"Y3",rev:32,ebitda:4.8,cities:10,ops:1400,mau:1.2},
+  {year:"Y4",rev:95,ebitda:22.5,cities:25,ops:5200,mau:4.8},
+  {year:"Y5",rev:240,ebitda:68,cities:50,ops:14000,mau:18},
+];
+
+const streams = [
+  {name:"Transaction Fees",pct:42,color:C.g,desc:"8–12% cut on every booking",yr5:101},
+  {name:"Operator SaaS",pct:26,color:C.lime,desc:"₹2K–15K/month per lot",yr5:62},
+  {name:"Hyperlocal Ads",pct:14,color:C.blue,desc:"Geo-fenced entry-point ads",yr5:34},
+  {name:"Data Licensing",pct:9,color:C.amber,desc:"Sold to cities, RE, retail",yr5:22},
+  {name:"Monthly Passes",pct:6,color:C.ora,desc:"₹499–1,999/month plans",yr5:14},
+  {name:"EV Charging",pct:3,color:C.purple,desc:"Commission on EV slot bookings",yr5:7},
+];
+
+const funding = [
+  {stage:"Bootstrap",amt:"₹25–50 Lakh",time:"Month 0",use:"MVP + 3 Whitefield/Koramangala pilots (Bangalore)",targets:"Founders + FFF",kpi:"50 operators live, ₹1L/month GMV",c:C.mut},
+  {stage:"Angel / Pre-Seed",amt:"₹1.5–2 Crore",time:"Month 6–9",use:"Full Bangalore launch, IoT procurement, 10-person team",targets:"100X.VC, Chennai Angels, LetsVenture, Venture Catalysts",kpi:"500 operators, 50K users, ₹25L/month GMV",c:C.blue},
+  {stage:"Seed",amt:"₹6–10 Crore",time:"Month 15–18",use:"3 metros (BLR/MUM/HYD), IoT scale, B2B sales force",targets:"Blume Ventures, Antler India, Surge by Sequoia, Beenext",kpi:"3 cities, 2K operators, 5L users, unit+ economics proven",c:C.g},
+  {stage:"Series A",amt:"₹35–60 Crore",time:"Month 30–36",use:"10 cities, smart city govt contracts, 60-person team",targets:"Accel India, Matrix Partners, Elevation Capital, Lightspeed",kpi:"₹32Cr ARR, 10 cities, EBITDA breakeven visible",c:C.lime},
+  {stage:"Series B",amt:"₹150–250 Crore",time:"Month 48–54",use:"50-city blast, EV integration, urban OS play + SEA expansion",targets:"Tiger Global, SoftBank Vision, Prosus, Nexus Ventures",kpi:"₹200Cr+ ARR, EBITDA+, IPO track clearly visible",c:C.amber},
+];
+
+const competitors = [
+  {name:"SpotIn (us)",rt:true,res:true,iot:true,saas:true,dyn:true,data:true},
+  {name:"Google Maps",rt:false,res:false,iot:false,saas:false,dyn:false,data:false},
+  {name:"ParkHero IN",rt:false,res:true,iot:false,saas:false,dyn:false,data:false},
+  {name:"PayPark IN",rt:false,res:false,iot:false,saas:false,dyn:false,data:false},
+  {name:"JioParking",rt:true,res:true,iot:false,saas:false,dyn:false,data:false},
+];
+
+const phases = [
+  {name:"Phase 1",period:"0–12 mo",cities:["Bangalore"],focus:"Product-market fit, IoT proof of concept",target:"₹1.2Cr ARR",c:C.g},
+  {name:"Phase 2",period:"12–24 mo",cities:["Mumbai","Hyderabad","Pune"],focus:"Metro replication, brand awareness, Seed fundraise",target:"₹8.5Cr ARR",c:C.lime},
+  {name:"Phase 3",period:"24–36 mo",cities:["Delhi NCR","Chennai","Kolkata","Ahmedabad","Jaipur","Surat"],focus:"National presence, govt smart-city partnerships",target:"₹32Cr ARR",c:C.amber},
+  {name:"Phase 4",period:"36–60 mo",cities:["50 cities (Tier-1 + Tier-2)"],focus:"Smart city OS positioning, EV, IPO prep",target:"₹240Cr ARR",c:C.ora},
+];
+
+const sprint = [
+  {week:"Week 1–2",theme:"Validate before building",color:C.g,tasks:[
+    "Talk to 50 drivers in person at Whitefield/Koramangala markets — record their parking pain on video",
+    "Visit 20 parking lots: understand operator economics, cash flow, current pain points",
+    "Register Pvt Ltd via Startupindia portal (< ₹10K via Razorpay Rize or Stampede Capital)",
+    "Secure domain spotin.in, set up GST, bank account, Razorpay sandbox",
+    "Build a simple Google Form survey — get 300+ responses in 48 hrs (post in RWA WhatsApp groups)",
+    "Find 3 'anchor operators' willing to pilot free for 30 days — get signed LOIs",
+  ]},
+  {week:"Week 3–4",theme:"Deploy MVP in 3 lots",color:C.lime,tasks:[
+    "Deploy human spotters at 3 Whitefield lots — ₹8K/lot/month, update app every 5 min via admin panel",
+    "Launch React Native MVP: live map + one-tap reservation + Razorpay payment. No bells. Just this.",
+    "Offer first 500 users ₹50 cashback on first booking — post in Whitefield community groups",
+    "Set up basic operator SaaS dashboard: occupancy %, daily revenue, booking list",
+    "Daily standup: what broke yesterday, fix it today. Ship every 2 days.",
+    "Target: 200 app installs and 50 actual bookings by end of Week 4",
+  ]},
+  {week:"Week 5–6",theme:"Iterate on signal",color:C.blue,tasks:[
+    "Analyse drop-off funnel: where in the booking flow do users quit? Fix the top 2 issues.",
+    "Call every single one of your first 50 users. What did they love? What confused them?",
+    "Operator check-in: are they seeing revenue uplift? Collect testimonial video if yes.",
+    "Add UPI AutoPay for monthly pass — your stickiest product starts here",
+    "Hire first employee: a city ops person who can sign 5 new operators per week",
+    "Open your first B2B sales pipeline: target 3 office parks and 2 malls for enterprise deals",
+  ]},
+  {week:"Week 7–9",theme:"Scale within Bangalore",color:C.amber,tasks:[
+    "If anchor lots hit 60%+ digital booking rate → expand to 15 more lots immediately",
+    "Install first IoT sensors in top 5 highest-volume lots (50+ bookings/day threshold)",
+    "Launch referral program: give users ₹30 for every friend who makes their first booking",
+    "Pitch to 5 local advertisers (restaurants, banks near parking lots) — even ₹5K/month each validates the model",
+    "Begin smart city RFP scanning: BBMP, BDA, BMTC — register on GeM portal",
+    "File provisional patent on your dynamic pricing algorithm (₹15K via patent agent)",
+  ]},
+  {week:"Week 10–13",theme:"Prepare for fundraise",color:C.purple,tasks:[
+    "Compile your fundraising data room: metrics dashboard, cohort charts, LOIs, operator agreements",
+    "Build your 12-slide deck (problem / solution / traction / market / model / team / ask)",
+    "Record a 3-minute Loom demo showing the full booking flow — attach to every cold email",
+    "Start warm intros to 20 angels via LinkedIn + AngelList India. No cold emails — always 2nd degree",
+    "Target: ₹1.5–2Cr pre-seed at ₹12–18Cr valuation (post-money), dilute max 15%",
+    "Milestone to unlock pre-seed: ₹1L/month GMV, 500 app users, 50 operators, 2 operators paying",
+  ]},
+];
+
+const partners = [
+  {
+    name:"Google Maps / Apple Maps",type:"Distribution",priority:"Critical",color:C.blue,
+    value:"\"Find parking near me\" → SpotIn results inside Maps. 500M+ daily searches in India.",
+    how:"Apply for Google Maps Platform Places API partner program. Submit your availability data via Places API (Parking lots already a category). Apple Maps Connect for iOS users.",
+    timeline:"Month 3–6",effort:"Medium — technical integration + partner approval",
+  },
+  {
+    name:"PhonePe / GPay / Paytm",type:"Payment & Distribution",priority:"High",color:C.g,
+    value:"In-app mini-app inside payment wallets. PhonePe alone has 500M+ users — parking as a daily-use category.",
+    how:"PhonePe Switch platform (mini-apps) and GPay Spot program allow 3rd-party integrations. Zero CAC channel once live.",
+    timeline:"Month 6–12",effort:"High — product integration + NDA + revenue share negotiation",
+  },
+  {
+    name:"Jio / Airtel",type:"IoT Connectivity",priority:"High",color:C.purple,
+    value:"LoRaWAN / NB-IoT SIM cards for sensors at bulk rates. Jio has India-wide NB-IoT network — critical for sensor reliability.",
+    how:"Jio IoT (jioiot.com) offers NB-IoT enterprise connectivity at ₹30–60/SIM/month. Airtel IoT similar. Negotiate volume pricing after 1,000 sensors deployed.",
+    timeline:"Month 2–4",effort:"Low — commercial deal, no tech integration needed",
+  },
+  {
+    name:"Smart City Mission / BBMP / BMC",type:"Government B2G",priority:"Strategic",color:C.amber,
+    value:"₹5–20Cr contracts to manage municipal parking lots digitally. Gives SpotIn supply-side market dominance in a city — impossible for competitors to replicate.",
+    how:"Register on GeM (Government e-Marketplace). Respond to Smart City RFPs in Bangalore, Pune, Surat. Get Startup India DPIIT recognition (tax benefits + fast-track empanelment).",
+    timeline:"Month 9–18",effort:"High — long sales cycle but transformative when closed",
+  },
+  {
+    name:"Nexus / Select Citywalk / Phoenix Mills",type:"Real Estate Enterprise",priority:"High",color:C.lime,
+    value:"India's top 50 malls handle 2M+ visitors/week. Parking is their #1 visitor complaint. Enterprise SaaS deal = ₹15K+/month × 200 malls = ₹3.6Cr ARR from this channel alone.",
+    how:"Direct enterprise sales to mall operations heads. Offer 90-day free pilot with guaranteed 20% reduction in peak congestion — a metric they already measure.",
+    timeline:"Month 6–15",effort:"Medium — long procurement but high LTV",
+  },
+  {
+    name:"Ola / Rapido / BluSmart",type:"Ride-hailing Integration",priority:"Medium",color:C.red,
+    value:"Drivers of ride-share apps need parking between rides. This is an underserved segment — 2M+ professional drivers in India who park 6–10× per day.",
+    how:"Integrate SpotIn as preferred parking partner via Ola Partner app. Revenue share on every driver booking. Ola gets a differentiator for their driver app.",
+    timeline:"Month 12–18",effort:"Medium — partnership negotiations + SDK integration",
+  },
+  {
+    name:"Tata Motors / MG / Hyundai (EV)",type:"EV Ecosystem",priority:"Future",color:C.ora,
+    value:"OEM integration: SpotIn EV charging finder pre-loaded in car's navigation system. Every EV sold = lifetime captive SpotIn user.",
+    how:"Approach via their Connected Car / Telematics team. Negotiate a ₹50–100 per car revenue share for bookings originating from in-vehicle nav.",
+    timeline:"Year 2–3",effort:"High — long enterprise cycle, high 5-year payoff",
+  },
+];
+
+const risks = [
+  {risk:"Low operator adoption speed",like:"Medium",impact:"High",score:6,
+   mit:"Two adoption models: SaaS subscription OR revenue share (0 upfront cost). 30-day free pilot. Human-first MVP eliminates IoT cost barrier. Target operators already using WhatsApp/digital tools — they're self-selected early adopters.",c:C.amber},
+  {risk:"Consumer cold-start problem",like:"High",impact:"High",score:9,
+   mit:"Launch in a single 0.5km radius (e.g. Whitefield Forum Mall area). Dense supply before demand. ₹50 first-booking discount + RWA WhatsApp campaign. Referral flywheel (₹30 per referral). Cold-start is solvable with geographic density.",c:C.red},
+  {risk:"IoT sensor reliability in Indian conditions",like:"Medium",impact:"High",score:6,
+   mit:"Start with human spotters for first 90 days — zero IoT dependency during validation. Grade sensors by environment (covered vs open-air vs road). Partner with Jio NB-IoT for redundant connectivity. Target 95% uptime SLA in contracts, not 99.9%.",c:C.amber},
+  {risk:"Well-funded competitor (Ola, Jio) launches",like:"Medium",impact:"High",score:6,
+   mit:"Best defense: move faster and get supply-side lock-in first. A competitor launching in Y2 faces your 18-month head start + operator switching costs + data moat. Zomato feared Jio entering food delivery for 3 years — it hasn't mattered.",c:C.amber},
+  {risk:"City government regulation changes",like:"Low",impact:"Medium",score:3,
+   mit:"Regulation is a tailwind not a risk — Smart City Mission MANDATES digital parking. Build govt relations early. DPIIT recognition + Smart City empanelment creates regulatory shields. No existing regulation bans dynamic parking pricing in India.",c:C.g},
+  {risk:"Operator revenue leakage / fraud",like:"Medium",impact:"Medium",score:4,
+   mit:"ANPR cameras cross-verify actual vehicles vs bookings. Anomaly detection flags lots where walk-in cash revenue diverges significantly from IoT occupancy. SaaS contract includes audit rights. This is a solvable operations problem, not a structural risk.",c:C.blue},
+  {risk:"Low driver willingness to pay",like:"Low",impact:"High",score:4,
+   mit:"Validated: drivers already pay ₹20–100 to park. SpotIn adds convenience and time-saving worth 10× the booking fee. Monthly pass at ₹499/month works out to ₹16/day — cheaper than a chai. Price sensitivity is high for casual users, low for habitual commuters.",c:C.g},
+  {risk:"Tech talent shortage / hiring cost",like:"High",impact:"Medium",score:6,
+   mit:"Build in Bangalore — deepest IoT + mobile talent pool in India. Offer ESOPs aggressively (reserve 15% option pool from Day 1). Partner with IIIT Bangalore, IISc for intern pipeline. Remote-first for non-ops roles expands talent access.",c:C.amber},
+];
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+
+function Metric({label,value,sub,color}){
+  return(
+    <div style={{...S.sc,borderLeft:`3px solid ${color||C.g}`}}>
+      <div style={S.lbl}>{label}</div>
+      <div style={S.num(color)}>{value}</div>
+      {sub&&<div style={{fontSize:11,color:C.mut,marginTop:2}}>{sub}</div>}
+    </div>
+  );
+}
+function Tag({c,children}){return <span style={S.pill(c||C.g)}>{children}</span>;}
+function Chk({ok}){return <span style={{color:ok?C.g:C.red,fontWeight:700}}>{ok?"✓":"✗"}</span>;}
+function Row({k,v,vc}){
+  return(
+    <div style={S.row}>
+      <span style={{fontSize:12,color:C.mut}}>{k}</span>
+      <span style={{fontSize:12,fontWeight:700,color:vc||C.sub}}>{v}</span>
+    </div>
+  );
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+
+function Overview(){
+  return(
+    <div>
+      <div style={S.g3}>
+        <Metric label="Time wasted per parking search" value="20 min" sub="Average across Indian commercial areas" color={C.red}/>
+        <Metric label="Urban traffic caused by parking seekers" value="40%" sub="Of peak congestion in Tier-1 Indian cities" color={C.amber}/>
+        <Metric label="India annual parking market" value="₹15,000 Cr" sub="95% unorganized — zero tech penetration" color={C.g}/>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>First Principles: Why This Problem Persists</div>
+        <div style={S.g2}>
+          <div>
+            <div style={S.h3}>Root cause chain</div>
+            {[
+              ["Information gap","Drivers can't see which spots are free in real time — it's pure luck"],
+              ["No reservation layer","Unlike flights/hotels, parking has zero booking infrastructure in India"],
+              ["Fragmented supply","Crores of small operators with no shared platform, API, or data layer"],
+              ["Cash-only legacy","Operators lose audit trails if they digitize. Zero incentive until now."],
+              ["No urban data","City planners can't size or optimize parking — there is no utilization data"],
+            ].map(([t,d],i)=>(
+              <div key={i} style={{display:"flex",gap:12,padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
+                <div style={{color:C.g,fontWeight:700,fontSize:11,minWidth:20}}>0{i+1}</div>
+                <div>
+                  <div style={{fontSize:13,fontWeight:600,color:C.sub}}>{t}</div>
+                  <div style={{fontSize:12,color:C.mut,marginTop:2}}>{d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div>
+            <div style={S.h3}>Hidden annual cost to India</div>
+            {[
+              ["₹18,000 Cr / year","Fuel burned while circling for a spot"],
+              ["4.2 billion hours","Driver time lost across all cities annually"],
+              ["₹3,200 Cr / year","Added urban emissions and air quality cost"],
+              ["₹2,100 Cr / year","SME revenue lost — shoppers give up and leave"],
+              ["28% of accidents","Near commercial/market zones due to circling"],
+            ].map(([v,l],i)=>(
+              <div key={i} style={S.row}>
+                <div style={{fontSize:12,color:C.mut}}>{l}</div>
+                <div style={{fontSize:13,fontWeight:700,color:C.amber}}>{v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{...S.card(),background:"#0a1e12",border:`1px solid ${C.borderHi}`,textAlign:"center",padding:"32px 28px"}}>
+        <div style={{fontSize:11,color:C.g,letterSpacing:3,marginBottom:12}}>THE SPOTIN THESIS</div>
+        <div style={{fontSize:21,fontWeight:700,color:C.txt,lineHeight:1.45,marginBottom:14}}>
+          India doesn't have a parking <span style={{color:C.g}}>shortage.</span><br/>
+          It has a parking <span style={{color:C.g}}>intelligence</span> shortage.
+        </div>
+        <div style={{fontSize:13,color:C.mut,maxWidth:560,margin:"0 auto 20px",lineHeight:1.7}}>
+          SpotIn builds the real-time parking intelligence layer for urban India — connecting 14 million unorganized spots to 300 million drivers through IoT sensors, a consumer app, and an operator SaaS platform.
+        </div>
+        <div>
+          {["₹240Cr ARR by Year 5","50 cities in 5 years","1.8 Cr daily active drivers","EBITDA+ from Year 3"].map((t,i)=>(
+            <Tag key={i} c={C.g}>{t}</Tag>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>Why Right Now — India's Parking Inflection Point</div>
+        <div style={S.g3}>
+          {[
+            {stat:"20M+",lbl:"New vehicles/year in India",why:"Cars growing 3× faster than parking supply"},
+            {stat:"₹800",lbl:"Cost per IoT sensor (2024)",why:"Was ₹8,000+ in 2018 — unit economics now viable"},
+            {stat:"650M+",lbl:"Smartphone users in India",why:"Urban India is fully app-native: UPI, maps, everything"},
+            {stat:"₹2.05L Cr",lbl:"Smart City Mission budget",why:"Centre mandating digital parking in 100+ cities by 2027"},
+            {stat:"10M EVs",lbl:"Expected on roads by 2030",why:"EV charging slot-finding is the next urgent parking problem"},
+            {stat:"12B / mo",lbl:"UPI transactions processed",why:"Cashless parking is consumer expectation, not innovation"},
+          ].map((item,i)=>(
+            <div key={i} style={{...S.sc,padding:"14px 16px"}}>
+              <div style={{fontSize:22,fontWeight:700,color:C.g,marginBottom:2}}>{item.stat}</div>
+              <div style={{fontSize:11,color:C.sub,marginBottom:6,fontWeight:600}}>{item.lbl}</div>
+              <div style={{fontSize:11,color:C.mut,lineHeight:1.5}}>{item.why}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Product(){
+  return(
+    <div>
+      <div style={S.card()}>
+        <div style={S.h2}>The SpotIn Platform — 3 Interconnected Pillars</div>
+        <div style={S.g3}>
+          {[
+            {pillar:"01 — Consumer App",color:C.g,icon:"📱",headline:"Find. Reserve. Navigate. Pay.",features:["Real-time map of available spots within 1 km","Reserve any spot up to 30 min in advance","Turn-by-turn navigation to the exact bay","UPI / card / wallet in-app payment","Monthly pass plans for regular commuters","EV charging slot finder integration","ML congestion prediction — best time to arrive"]},
+            {pillar:"02 — IoT Sensor Network",color:C.lime,icon:"📡",headline:"Ground truth for every spot.",features:["Ultrasonic + magnetic sensor per bay (₹800–1,200)","10-second refresh via LoRa/WiFi gateway","ANPR camera at entry for license plate recognition","Solar-powered option for open surface lots","Edge computing: 99.5% uptime target","Operator install < 2 hours per lot","Asset-leasing model — zero CapEx for operators"]},
+            {pillar:"03 — Operator SaaS",color:C.blue,icon:"🖥️",headline:"Command center for every lot.",features:["Real-time occupancy dashboard","Dynamic pricing controls (surge by hour/demand)","Revenue analytics and daily/weekly reports","Booking management and staff override tools","Bulk monthly pass management","API for mall / hospital / office BMS integration","White-label option for large corporates"]},
+          ].map((p,i)=>(
+            <div key={i} style={{...S.card(),margin:0,borderTop:`3px solid ${p.color}`}}>
+              <div style={{fontSize:20,marginBottom:8}}>{p.icon}</div>
+              <div style={{fontSize:11,color:p.color,letterSpacing:1.5,marginBottom:4}}>{p.pillar}</div>
+              <div style={{fontSize:14,fontWeight:600,color:C.txt,marginBottom:12}}>{p.headline}</div>
+              {p.features.map((f,j)=>(
+                <div key={j} style={{fontSize:12,color:C.mut,padding:"4px 0",display:"flex",gap:8}}>
+                  <span style={{color:p.color,flexShrink:0}}>→</span>{f}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>The 3-Minute User Journey</div>
+        <div style={{display:"flex",gap:0,overflowX:"auto",paddingBottom:4}}>
+          {[
+            {step:"1",action:"Open SpotIn",detail:"Enter market/destination",time:"5 sec",color:C.mut},
+            {step:"2",action:"Live map view",detail:"See spots, prices, distances",time:"10 sec",color:C.blue},
+            {step:"3",action:"Reserve",detail:"One tap — 30-min hold",time:"5 sec",color:C.g},
+            {step:"4",action:"Navigate",detail:"Turn-by-turn to exact bay",time:"~3 min",color:C.lime},
+            {step:"5",action:"Park & Pay",detail:"Scan QR or auto-pay on exit",time:"10 sec",color:C.amber},
+          ].map((step,i,arr)=>(
+            <div key={i} style={{display:"flex",alignItems:"stretch",flexShrink:0}}>
+              <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"14px 16px",minWidth:164,borderTop:`3px solid ${step.color}`}}>
+                <div style={{fontSize:10,color:step.color,marginBottom:4,fontWeight:700}}>STEP {step.step} · {step.time}</div>
+                <div style={{fontSize:13,fontWeight:600,color:C.txt,marginBottom:4}}>{step.action}</div>
+                <div style={{fontSize:11,color:C.mut}}>{step.detail}</div>
+              </div>
+              {i<arr.length-1&&<div style={{display:"flex",alignItems:"center",padding:"0 6px",color:C.dim,fontSize:14}}>→</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>Technology Architecture</div>
+        <div style={S.g2}>
+          <div>
+            <div style={S.h3}>Consumer app</div>
+            {[["Frontend","React Native (iOS + Android)"],["Maps","Google Maps Platform + HERE"],["Payments","Razorpay + UPI + BBPS"],["Auth","Firebase Auth + OTP"],["Navigation","Mapbox custom routing"]].map(([k,v])=><Row key={k} k={k} v={v}/>)}
+          </div>
+          <div>
+            <div style={S.h3}>Backend & IoT</div>
+            {[["Backend","Node.js + Go (microservices)"],["Database","PostgreSQL + Redis + InfluxDB"],["IoT protocol","LoRaWAN + MQTT"],["ML / AI","Python — demand prediction + pricing"],["Infra","AWS Mumbai region + CloudFront CDN"]].map(([k,v])=><Row key={k} k={k} v={v}/>)}
+          </div>
+        </div>
+      </div>
+
+      <div style={{...S.card(C.amber)}}>
+        <div style={S.h2}>YC-Style MVP: Don't Wait For Perfect IoT</div>
+        <div style={{fontSize:13,color:C.mut,lineHeight:1.7,marginBottom:14}}>
+          <strong style={{color:C.amber}}>The Day 1 hack:</strong> Before installing a single sensor, deploy human "spotters" (part-time gig workers) at each lot who update availability every 5 minutes via a simple admin app. Costs ₹8,000/month per lot. This validates consumer demand with zero hardware risk. When a lot hits 50 bookings/day, install IoT. Business logic is proven before the tech is perfect — Zomato did this with phone-order aggregation before building restaurant POS integrations.
+        </div>
+        <div style={S.g3}>
+          {[
+            {phase:"Days 1–30",action:"Manual spotters at 5 lots",cost:"₹40K/month",validates:"Do drivers actually book?"},
+            {phase:"Days 31–90",action:"IoT sensors in top 10 lots",cost:"₹1.5L one-time",validates:"Do operators pay SaaS?"},
+            {phase:"Days 91–180",action:"Full Whitefield + Koramangala",cost:"₹8L total",validates:"Are unit economics positive?"},
+          ].map((p,i)=>(
+            <div key={i} style={{...S.sc,padding:"14px 16px"}}>
+              <div style={{fontSize:11,color:C.amber,marginBottom:4}}>{p.phase}</div>
+              <div style={{fontSize:13,fontWeight:600,color:C.txt,marginBottom:6}}>{p.action}</div>
+              <div style={{fontSize:11,color:C.mut,marginBottom:4}}>Cost: <span style={{color:C.g}}>{p.cost}</span></div>
+              <div style={{fontSize:11,color:C.mut}}>Validates: {p.validates}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BusinessModel(){
+  const CT = ({active,payload})=>{
+    if(!active||!payload?.length)return null;
+    const d=payload[0].payload;
+    return(
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 14px",fontSize:12}}>
+        <div style={{fontWeight:600,color:C.txt,marginBottom:4}}>{d.name}</div>
+        <div style={{color:C.mut}}>{d.pct}% of revenue mix</div>
+        <div style={{color:C.g}}>₹{d.yr5}Cr in Year 5</div>
+        <div style={{color:C.mut,marginTop:4}}>{d.desc}</div>
+      </div>
+    );
+  };
+  return(
+    <div>
+      <div style={S.card()}>
+        <div style={S.h2}>6 Revenue Streams — Year 5 Mix</div>
+        <div style={S.g2}>
+          <ResponsiveContainer width="100%" height={270}>
+            <PieChart>
+              <Pie data={streams} cx="50%" cy="50%" innerRadius={70} outerRadius={110} dataKey="pct" paddingAngle={3}>
+                {streams.map((s,i)=><Cell key={i} fill={s.color}/>)}
+              </Pie>
+              <Tooltip content={<CT/>}/>
+            </PieChart>
+          </ResponsiveContainer>
+          <div>
+            {streams.map((s,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
+                <div style={{width:8,height:8,borderRadius:2,background:s.color,flexShrink:0}}/>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:600,color:C.txt}}>{s.name}</div>
+                  <div style={{fontSize:11,color:C.mut}}>{s.desc}</div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:14,fontWeight:700,color:s.color}}>{s.pct}%</div>
+                  <div style={{fontSize:11,color:C.mut}}>₹{s.yr5}Cr</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>Unit Economics</div>
+        <div style={S.g2}>
+          <div>
+            <div style={S.h3}>Consumer (B2C)</div>
+            {[["CAC (digital + referral)","₹150–200"],["Avg transaction fee","₹4–8 per booking"],["Bookings per user/month","6–8×"],["Monthly contribution","₹30–60/user"],["Annual LTV (18-mo tenure)","₹540–1,080"],["LTV : CAC ratio","3.5 – 5.4×"],["Payback period","3–5 months"]].map(([k,v])=><Row key={k} k={k} v={v} vc={C.g}/>)}
+          </div>
+          <div>
+            <div style={S.h3}>Operator (B2B SaaS)</div>
+            {[["CAC (sales + installation)","₹8,000–15,000"],["Average SaaS plan","₹6,500/month"],["Average operator tenure","3–5 years"],["Transaction rev share / lot","₹8K–25K/month"],["Total monthly rev / operator","₹14.5K–40K"],["Annual LTV per operator","₹1.75–4.8 Lakh"],["LTV : CAC ratio","15 – 30×"]].map(([k,v])=><Row key={k} k={k} v={v} vc={C.lime}/>)}
+          </div>
+        </div>
+      </div>
+
+      <div style={{...S.card(C.purple)}}>
+        <div style={S.h2}>Dynamic Pricing — The Margin Multiplier</div>
+        <div style={S.g3}>
+          {[
+            {scenario:"Off-peak (10am–5pm weekdays)",base:"₹20/hr",mult:"0.8×",eff:"₹16/hr",take:"~₹1.6"},
+            {scenario:"Standard (weekday evenings)",base:"₹30/hr",mult:"1.2×",eff:"₹36/hr",take:"~₹3.6"},
+            {scenario:"Peak (Sat/Sun market days)",base:"₹30/hr",mult:"2–3×",eff:"₹60–90/hr",take:"~₹8"},
+          ].map((d,i)=>(
+            <div key={i} style={S.sc}>
+              <div style={{fontSize:11,color:C.purple,marginBottom:8}}>{d.scenario}</div>
+              <Row k="Base rate" v={d.base}/>
+              <Row k="Surge multiplier" v={d.mult} vc={C.purple}/>
+              <Row k="Effective price" v={d.eff} vc={C.txt}/>
+              <div style={{display:"flex",justifyContent:"space-between",padding:"9px 0"}}>
+                <span style={{fontSize:12,color:C.mut}}>SpotIn take</span>
+                <span style={{fontSize:14,fontWeight:700,color:C.g}}>{d.take}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>Pricing Strategy: Operator Tiers</div>
+        <div style={S.g3}>
+          {[
+            {tier:"Starter",price:"₹2,000 / mo",forWho:"Small surface lots, 10–30 spots",inc:["Basic SaaS dashboard","App listing","Standard analytics","Community support"],c:C.mut},
+            {tier:"Growth",price:"₹6,500 / mo",forWho:"Mid-size lots, 30–150 spots",inc:["Full dynamic pricing","ANPR integration","Revenue share optimization","Priority support + onboarding"],c:C.g},
+            {tier:"Enterprise",price:"₹15,000+ / mo",forWho:"Malls, hospitals, IT parks",inc:["White-label app option","BMS integration APIs","Dedicated CSM","SLA 99.9% uptime"],c:C.lime},
+          ].map((t,i)=>(
+            <div key={i} style={{...S.card(),margin:0,borderTop:`3px solid ${t.c}`}}>
+              <div style={{fontSize:11,color:t.c,marginBottom:4,letterSpacing:1}}>{t.tier}</div>
+              <div style={{fontSize:18,fontWeight:700,color:C.txt,marginBottom:4}}>{t.price}</div>
+              <div style={{fontSize:11,color:C.mut,marginBottom:10}}>{t.forWho}</div>
+              {t.inc.map((f,j)=><div key={j} style={{fontSize:11,color:C.mut,display:"flex",gap:8,marginBottom:4}}><span style={{color:t.c}}>✓</span>{f}</div>)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MarketGTM(){
+  return(
+    <div>
+      <div style={S.card()}>
+        <div style={S.h2}>Market Sizing</div>
+        <div style={S.g3}>
+          {[
+            {label:"TAM",sub:"Total Addressable Market",value:"₹68,000 Cr",detail:"India's full parking + urban congestion cost ecosystem including indirect SME losses",color:C.mut},
+            {label:"SAM",sub:"Serviceable Addressable Market",value:"₹15,000 Cr",detail:"Organized + semi-organized urban parking across India's 50 largest cities",color:C.blue},
+            {label:"SOM",sub:"SpotIn 5-Year Target",value:"₹240 Cr ARR",detail:"1.6% of SAM — conservative in a winner-takes-most market. Zomato analogy: started at 0.5% of food delivery TAM.",color:C.g},
+          ].map((m,i)=>(
+            <div key={i} style={{...S.card(),margin:0,borderTop:`3px solid ${m.color}`}}>
+              <div style={{fontSize:30,fontWeight:700,color:m.color}}>{m.label}</div>
+              <div style={{fontSize:11,color:C.mut,marginBottom:8}}>{m.sub}</div>
+              <div style={{fontSize:18,fontWeight:700,color:C.txt,marginBottom:8}}>{m.value}</div>
+              <div style={{fontSize:12,color:C.mut,lineHeight:1.5}}>{m.detail}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>4-Phase City Expansion</div>
+        {phases.map((ph,i)=>(
+          <div key={i} style={{display:"flex",gap:16,padding:"14px 0",borderBottom:`1px solid ${C.border}`,alignItems:"flex-start"}}>
+            <div style={{minWidth:88}}>
+              <div style={{fontSize:11,color:ph.c,fontWeight:700,letterSpacing:1}}>{ph.name}</div>
+              <div style={{fontSize:11,color:C.mut,marginTop:2}}>{ph.period}</div>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:6}}>
+                {ph.cities.map((c,j)=><Tag key={j} c={ph.c}>{c}</Tag>)}
+              </div>
+              <div style={{fontSize:12,color:C.mut}}>{ph.focus}</div>
+            </div>
+            <div style={{textAlign:"right",minWidth:100}}>
+              <div style={{fontSize:13,fontWeight:700,color:ph.c}}>{ph.target}</div>
+              <div style={{fontSize:11,color:C.mut}}>revenue target</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>City Launch Playbook (Repeatable)</div>
+        <div style={S.g2}>
+          {[
+            {wk:"Week 1–2",title:"Ground recon",acts:["Map every parking lot within 3km of top 5 markets","Cold-call 50 operators with 15-min demo","Sign 3 anchor operators for free 30-day pilot"]},
+            {wk:"Week 3–4",title:"Anchor launch",acts:["Install IoT at anchor lots (or deploy spotters)","₹50 discount on first booking → 500+ app downloads","Local micro-influencer + RWA WhatsApp group blitz"]},
+            {wk:"Month 2",title:"Expand on signal",acts:["If anchor lots hit 80%+ digital occupancy → expand to 20 more","Offer operators revenue-share vs SaaS (their choice)","PR: local news, office parks, hospital parking deals"]},
+            {wk:"Month 3–6",title:"Lock-in & monetize",acts:["Convert free trials to paid SaaS plans","Launch monthly passes for regular commuters","Sign first 3 local advertisers (restaurant/bank/mall)"]},
+          ].map((s,i)=>(
+            <div key={i} style={{...S.sc,padding:"16px"}}>
+              <div style={{fontSize:11,color:C.g,marginBottom:2,fontWeight:600}}>{s.wk}</div>
+              <div style={{fontSize:13,fontWeight:600,color:C.txt,marginBottom:10}}>{s.title}</div>
+              {s.acts.map((a,j)=><div key={j} style={{fontSize:11,color:C.mut,display:"flex",gap:6,marginBottom:4}}><span style={{color:C.g,flexShrink:0}}>•</span>{a}</div>)}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>Competitive Matrix — Full-Stack Wins</div>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+            <thead>
+              <tr>{["Company","Real-time","Advance booking","IoT owned","Operator SaaS","Dynamic pricing","Data licensing"].map((h,i)=>(
+                <th key={i} style={{textAlign:i===0?"left":"center",padding:"8px 12px",color:C.mut,fontWeight:500,borderBottom:`1px solid ${C.border}`,whiteSpace:"nowrap"}}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {competitors.map((r,i)=>(
+                <tr key={i} style={{background:i===0?"#0a1e12":"transparent"}}>
+                  <td style={{padding:"10px 12px",fontWeight:i===0?700:400,color:i===0?C.g:C.txt,borderBottom:`1px solid ${C.border}`}}>{r.name}</td>
+                  {["rt","res","iot","saas","dyn","data"].map(k=>(
+                    <td key={k} style={{textAlign:"center",padding:"10px 12px",borderBottom:`1px solid ${C.border}`}}><Chk ok={r[k]}/></td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{marginTop:12,fontSize:12,color:C.mut}}>SpotIn is the <strong style={{color:C.g}}>only player</strong> in India building the full stack. Everyone else solves one piece. Full-stack compounds into moats.</div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>5 Compounding Moats</div>
+        <div style={S.g2}>
+          {[
+            {name:"Data network effect",c:C.g,desc:"Every new spot adds data. More data → better ML pricing → better outcomes → more operators → more data. This flywheel compounds faster than any competitor can cold-start."},
+            {name:"Supply-side switching cost",c:C.lime,desc:"Once a lot installs SpotIn IoT and trains staff on SaaS, switching is painful. Operators don't want to retrain, reinstall, or lose 12 months of booking history."},
+            {name:"Two-sided marketplace lock-in",c:C.blue,desc:"More operators → more users. More users → operators can't ignore SpotIn. Classic marketplace moat that took Zomato/Swiggy 18+ months to crack in food delivery."},
+            {name:"Smart city B2G contracts",c:C.amber,desc:"Govt contracts for municipal lots and city parking dashboards create regulatory moats. Once you're the data provider for BBMP / BMC, no private competitor can replicate that."},
+            {name:"Real estate BMS integration",c:C.purple,desc:"Malls, hospitals, IT parks want seamless visitor parking. Once embedded in their Building Management System, you're as hard to replace as the elevator software."},
+          ].map((m,i)=>(
+            <div key={i} style={{...S.sc,borderLeft:`3px solid ${m.c}`,padding:"14px 16px"}}>
+              <div style={{fontSize:13,fontWeight:600,color:m.c,marginBottom:6}}>{m.name}</div>
+              <div style={{fontSize:12,color:C.mut,lineHeight:1.6}}>{m.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Financials(){
+  const CT=({active,payload,label})=>{
+    if(!active||!payload?.length)return null;
+    return(
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:6,padding:"10px 14px",fontSize:12}}>
+        <div style={{fontWeight:600,color:C.txt,marginBottom:6}}>{label}</div>
+        {payload.map((p,i)=><div key={i} style={{color:p.color,marginBottom:2}}>₹{p.value}Cr — {p.name}</div>)}
+      </div>
+    );
+  };
+  return(
+    <div>
+      <div style={S.card()}>
+        <div style={S.h2}>5-Year Financial Projections (₹ Crore)</div>
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={revData} margin={{top:10,right:10,left:0,bottom:0}}>
+            <defs>
+              <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={C.g} stopOpacity={0.3}/>
+                <stop offset="95%" stopColor={C.g} stopOpacity={0.02}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke={C.border} strokeDasharray="3 3"/>
+            <XAxis dataKey="year" stroke={C.mut} tick={{fill:C.mut,fontSize:12}}/>
+            <YAxis stroke={C.mut} tick={{fill:C.mut,fontSize:11}} tickFormatter={v=>`₹${v}Cr`}/>
+            <Tooltip content={<CT/>}/>
+            <Area type="monotone" dataKey="rev" name="Revenue" stroke={C.g} fill="url(#gr)" strokeWidth={2}/>
+            <Area type="monotone" dataKey="ebitda" name="EBITDA" stroke={C.amber} fill="none" strokeWidth={1.5} strokeDasharray="4 3"/>
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>Key Metrics By Year</div>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+            <thead>
+              <tr>{["Metric","Y1","Y2","Y3","Y4","Y5"].map((h,i)=>(
+                <th key={i} style={{textAlign:i===0?"left":"right",padding:"8px 12px",color:C.mut,fontWeight:500,borderBottom:`1px solid ${C.border}`}}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {[
+                {label:"Revenue (₹ Cr)",key:"rev",color:C.g,fmt:v=>`₹${v}Cr`},
+                {label:"EBITDA (₹ Cr)",key:"ebitda",color:C.amber,fmt:(v)=>v<0?`(₹${Math.abs(v)}Cr)`:`₹${v}Cr`,neg:true},
+                {label:"Cities live",key:"cities",color:C.blue,fmt:v=>v},
+                {label:"Parking operators",key:"ops",color:C.lime,fmt:v=>v.toLocaleString("en-IN")},
+                {label:"MAU (millions)",key:"mau",color:C.purple,fmt:v=>`${v}M`},
+              ].map((row,ri)=>(
+                <tr key={ri} style={{borderBottom:`1px solid ${C.border}`}}>
+                  <td style={{padding:"10px 12px",color:C.mut}}>{row.label}</td>
+                  {revData.map((d,di)=>(
+                    <td key={di} style={{padding:"10px 12px",textAlign:"right",fontWeight:700,color:row.neg&&d[row.key]<0?C.red:row.color}}>
+                      {row.fmt(d[row.key])}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>Model Assumptions</div>
+        <div style={S.g2}>
+          <div>
+            <div style={S.h3}>Growth assumptions</div>
+            {[["Operator growth rate","3× YoY for first 3 years"],["Consumer viral coefficient","1.4 (each user → 1.4 referrals)"],["ARPU growth (consumer)","₹35/mo Y1 → ₹85/mo Y3"],["Operator churn","< 8% annually (high switching cost)"],["Avg bookings / operator / day","12 → 28 as consumer base grows"]].map(([k,v])=><Row key={k} k={k} v={v}/>)}
+          </div>
+          <div>
+            <div style={S.h3}>Cost assumptions</div>
+            {[["IoT sensor cost per bay","₹800–1,200 (amortized 5yr)"],["Consumer CAC","₹150–200 (falls as brand grows)"],["Gross margin target (Y5)","72% (SaaS + transaction)"],["OpEx as % of revenue (Y5)","35% (scale efficiencies)"],["Blended take rate on GMV","10.5–12.5%"]].map(([k,v])=><Row key={k} k={k} v={v}/>)}
+          </div>
+        </div>
+      </div>
+
+      <div style={{...S.card(C.g)}}>
+        <div style={S.h2}>Path To Profitability</div>
+        <div style={S.g3}>
+          {[
+            {label:"Y1",status:"Investing",desc:"Burn ₹3.5Cr to build tech + ops in Bangalore. Every rupee buys validated learning.",c:C.red},
+            {label:"Y2",status:"Near-breakeven",desc:"₹8.5Cr revenue, ₹2.2Cr loss. Multi-city ramp. Transaction economics proven.",c:C.amber},
+            {label:"Y3",status:"EBITDA positive ✓",desc:"₹32Cr revenue, ₹4.8Cr EBITDA. SaaS subscriptions now cover fixed cost base.",c:C.g},
+            {label:"Y4",status:"Scaling profits",desc:"₹95Cr revenue, ₹22.5Cr EBITDA. Data licensing and ad revenue kick in hard.",c:C.lime},
+            {label:"Y5",status:"IPO-ready",desc:"₹240Cr revenue, ₹68Cr EBITDA (28% margin). Public market or strategic exit.",c:C.gBri},
+          ].map((yr,i)=>(
+            <div key={i} style={{...S.sc,borderTop:`3px solid ${yr.c}`,padding:"14px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                <span style={{fontSize:16,fontWeight:700,color:yr.c}}>{yr.label}</span>
+                <span style={{...S.pill(yr.c),margin:0,fontSize:10}}>{yr.status}</span>
+              </div>
+              <div style={{fontSize:12,color:C.mut,lineHeight:1.5}}>{yr.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Funding(){
+  return(
+    <div>
+      <div style={S.card()}>
+        <div style={S.h2}>5-Round Funding Roadmap</div>
+        {funding.map((f,i)=>(
+          <div key={i} style={{display:"flex",gap:16,padding:"16px 0",borderBottom:`1px solid ${C.border}`}}>
+            <div style={{minWidth:5,background:f.c,borderRadius:4,alignSelf:"stretch"}}/>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                <div>
+                  <span style={{fontSize:14,fontWeight:700,color:f.c}}>{f.stage}</span>
+                  <span style={{fontSize:11,color:C.mut,marginLeft:10}}>{f.time}</span>
+                </div>
+                <div style={{fontSize:16,fontWeight:700,color:C.txt}}>{f.amt}</div>
+              </div>
+              <div style={S.g2}>
+                <div>
+                  <div style={{fontSize:10,color:C.mut,letterSpacing:1,marginBottom:4}}>USE OF FUNDS</div>
+                  <div style={{fontSize:12,color:C.sub}}>{f.use}</div>
+                </div>
+                <div>
+                  <div style={{fontSize:10,color:C.mut,letterSpacing:1,marginBottom:4}}>TARGET INVESTORS</div>
+                  <div style={{fontSize:12,color:C.sub}}>{f.targets}</div>
+                </div>
+              </div>
+              <div style={{marginTop:8,background:C.surface,borderRadius:6,padding:"8px 12px"}}>
+                <span style={{fontSize:11,color:C.mut}}>KPI to unlock next round: </span>
+                <span style={{fontSize:11,color:f.c,fontWeight:600}}>{f.kpi}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>How To Pitch Each Investor Type</div>
+        <div style={S.g2}>
+          {[
+            {type:"Angel / Pre-Seed",c:C.blue,angle:"\"You're the first check in the Swiggy of parking.\"",hooks:["Open with: walk them through your own 20-min parking horror story","Demo the live map + one booking in < 30 seconds on your phone","Highlight ₹800 sensor cost — unit economics work TODAY, not someday","Close: ₹2Cr for 18 months of runway + Bangalore market proof"]},
+            {type:"Seed (Blume / Surge / Antler)",c:C.g,angle:"\"We've proven PMF in Bangalore. Fund the replication playbook.\"",hooks:["Show Day 30 / Day 90 user retention cohorts (target: >40% D30)","Show operator NPS > 65 — they're renewing, not churning","Present the network effect data: more operators → CAC falling","Reveal smart city RFP pipeline — govt is now pulling you in"]},
+            {type:"Series A (Accel / Matrix)",c:C.lime,angle:"\"The winner-takes-most urban mobility OS for India.\"",hooks:["ARR trajectory: 7× YoY from ₹8.5Cr → ₹32Cr with visibility to ₹100Cr","Show 3 cities at unit economics positive, 7 in ramp","Data licensing TAM alone: ₹3,000Cr from govts + RE + retail","Team: ex-Ola/Zomato ops + ex-ISRO IoT engineer + CRED product"]},
+            {type:"Series B (Tiger / SoftBank)",c:C.amber,angle:"\"India's urban parking is a $2B market. We're at 12% of SAM.\"",hooks:["Revenue ₹95Cr → ₹240Cr with clear path to ₹600Cr by Y7","EBITDA+ and cash generative at time of this raise","International angle: SEA (Indonesia, Vietnam) — same problem, same model","IPO story: EV + smart city legislation creates 10-year tailwind"]},
+          ].map((inv,i)=>(
+            <div key={i} style={{...S.card(),margin:0,borderTop:`3px solid ${inv.c}`}}>
+              <div style={{fontSize:12,fontWeight:700,color:inv.c,marginBottom:6}}>{inv.type}</div>
+              <div style={{fontSize:13,fontStyle:"italic",color:C.txt,marginBottom:10,lineHeight:1.4}}>{inv.angle}</div>
+              {inv.hooks.map((h,j)=><div key={j} style={{fontSize:11,color:C.mut,display:"flex",gap:8,marginBottom:5}}><span style={{color:inv.c,flexShrink:0}}>→</span>{h}</div>)}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>Ideal Founding Team Profile</div>
+        <div style={S.g3}>
+          {[
+            {role:"CEO / GTM",bg:"Ex-Ola/Rapido/Swiggy city launch ops",skill:"Can close operators in < 15 min demo. Knows city government contacts personally.",c:C.g},
+            {role:"CTO",bg:"Mobile + IoT + backend at scale",skill:"Can ship consumer app + IoT stack in < 90 days. Ex-ISRO embedded or ex-Meesho infra.",c:C.blue},
+            {role:"CPO / Design",bg:"Consumer app UX — ex-PhonePe / CRED",skill:"Obsessive about the 30-second booking flow. Drives the retention loop.",c:C.lime},
+            {role:"VP B2B Sales",bg:"SaaS to SMEs and enterprise",skill:"Owns operator pipeline from cold call to signed MRR. Hits 20+ demos/week.",c:C.amber},
+            {role:"Data / ML Lead",bg:"Python + ML + real-time systems",skill:"Builds demand prediction and surge pricing engine. Ex-Ola Maps or Urban Company.",c:C.purple},
+          ].map((m,i)=>(
+            <div key={i} style={{...S.sc,padding:"14px",borderTop:`3px solid ${m.c}`}}>
+              <div style={{fontSize:12,fontWeight:700,color:m.c,marginBottom:4}}>{m.role}</div>
+              <div style={{fontSize:11,color:C.sub,marginBottom:6}}>{m.bg}</div>
+              <div style={{fontSize:11,color:C.mut,lineHeight:1.5}}>{m.skill}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{...S.card(),background:"#0a1e12",border:`1px solid ${C.borderHi}`,padding:"24px"}}>
+        <div style={S.h2}>Exit Scenarios — Year 5 to 7</div>
+        <div style={S.g3}>
+          {[
+            {type:"IPO",tl:"Year 7",mult:"8–12× ARR",val:"₹1,900–2,900 Cr",desc:"Smart city + EV legislation narrative. NSE mainboard. The Deepinder Goyal playbook.",c:C.g},
+            {type:"Strategic M&A",tl:"Year 5–6",mult:"6–10× ARR",val:"₹1,400–2,400 Cr",desc:"Ola, Zomato/Blinkit, CRED, or Jio acquiring for urban mobility platform play.",c:C.lime},
+            {type:"PE Buyout",tl:"Year 6",mult:"5–7× ARR",val:"₹1,200–1,700 Cr",desc:"EBITDA+ recurring SaaS + marketplace = PE-friendly profile. ChrysCapital / Advent type.",c:C.blue},
+          ].map((e,i)=>(
+            <div key={i} style={{...S.sc,borderTop:`3px solid ${e.c}`,padding:"16px"}}>
+              <div style={{fontSize:14,fontWeight:700,color:e.c,marginBottom:4}}>{e.type}</div>
+              <div style={{fontSize:20,fontWeight:700,color:C.txt,marginBottom:4}}>{e.val}</div>
+              <div style={{fontSize:11,color:C.mut,marginBottom:6}}>Timeline: {e.tl} · {e.mult}</div>
+              <div style={{fontSize:11,color:C.mut,lineHeight:1.5}}>{e.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SprintPlan(){
+  return(
+    <div>
+      <div style={{...S.card(),background:"#0a1e12",border:`1px solid ${C.borderHi}`,padding:"24px 28px",marginBottom:14}}>
+        <div style={{fontSize:11,color:C.g,letterSpacing:3,marginBottom:8}}>EXECUTION PHILOSOPHY</div>
+        <div style={{fontSize:17,fontWeight:700,color:C.txt,lineHeight:1.45,marginBottom:10}}>
+          Don't plan to be perfect. Plan to be <span style={{color:C.g}}>fast and learning.</span>
+        </div>
+        <div style={{fontSize:13,color:C.mut,lineHeight:1.7}}>
+          Every week has a measurable output. If a week ends without a shipped thing or a validated assumption, it was a wasted week. The first 90 days are about one thing: finding out if drivers will book and operators will pay — with the minimum possible money spent.
+        </div>
+      </div>
+
+      {sprint.map((sp,i)=>(
+        <div key={i} style={{...S.card(),borderLeft:`3px solid ${sp.color}`,marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+            <div>
+              <div style={{fontSize:11,color:sp.color,letterSpacing:2,fontWeight:600,marginBottom:4}}>{sp.week}</div>
+              <div style={{fontSize:15,fontWeight:700,color:C.txt}}>{sp.theme}</div>
+            </div>
+            <Tag c={sp.color}>{`Phase ${i+1} of 5`}</Tag>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 16px"}}>
+            {sp.tasks.map((t,j)=>(
+              <div key={j} style={{display:"flex",gap:10,padding:"6px 0",alignItems:"flex-start"}}>
+                <div style={{width:18,height:18,borderRadius:4,background:sp.color+"22",border:`1px solid ${sp.color}44`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
+                  <span style={{fontSize:9,color:sp.color,fontWeight:700}}>{j+1}</span>
+                </div>
+                <div style={{fontSize:12,color:C.mut,lineHeight:1.55}}>{t}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <div style={S.card()}>
+        <div style={S.h2}>First 12 Hires — In This Order</div>
+        <div style={S.g3}>
+          {[
+            {n:"#1",role:"City Ops Lead",when:"Month 1",why:"Signs 5+ operators/week. This is a sales + hustle role.",c:C.g},
+            {n:"#2",role:"React Native Developer",when:"Month 1",why:"Ships the consumer app. Must ship v1 in < 30 days.",c:C.g},
+            {n:"#3",role:"IoT/Backend Engineer",when:"Month 2",why:"Builds sensor firmware + real-time data pipeline.",c:C.lime},
+            {n:"#4",role:"Growth / Performance Marketing",when:"Month 2",why:"Owns user acquisition. CAC target: < ₹200.",c:C.lime},
+            {n:"#5",role:"Business Analyst / Data",when:"Month 3",why:"Builds cohort dashboards that tell you what's working.",c:C.blue},
+            {n:"#6",role:"B2B Sales (Enterprise)",when:"Month 4",why:"Closes mall, hospital, IT park deals. High ticket.",c:C.blue},
+            {n:"#7–9",role:"3× Engineering",when:"Month 5–6",why:"Scale the platform for multi-city. SaaS + IoT + infra.",c:C.amber},
+            {n:"#10–12",role:"City Ops × 2 + Customer Success",when:"Month 6–8",why:"City 2 launch team + operator onboarding at scale.",c:C.amber},
+          ].map((h,i)=>(
+            <div key={i} style={{...S.sc,padding:"12px 14px",borderLeft:`2px solid ${h.c}`}}>
+              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:4}}>
+                <span style={{fontSize:12,fontWeight:700,color:h.c}}>{h.n}</span>
+                <span style={{fontSize:12,fontWeight:600,color:C.txt}}>{h.role}</span>
+              </div>
+              <div style={{fontSize:10,color:C.mut,marginBottom:4}}>{h.when}</div>
+              <div style={{fontSize:11,color:C.mut,lineHeight:1.5}}>{h.why}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>90-Day Milestone Scorecard</div>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+            <thead>
+              <tr>{["Milestone","Day 30","Day 60","Day 90"].map((h,i)=>(
+                <th key={i} style={{textAlign:i===0?"left":"center",padding:"8px 12px",color:C.mut,fontWeight:500,borderBottom:`1px solid ${C.border}`}}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {[
+                ["App installs","200","1,500","5,000+"],
+                ["Confirmed bookings","50","400","2,000+"],
+                ["Parking operators live","3","15","50"],
+                ["Operators paying SaaS","0","3","12"],
+                ["Monthly GMV","₹15K","₹1.2L","₹5L+"],
+                ["SpotIn net revenue","₹1.5K","₹12K","₹50K+"],
+                ["NPS (drivers)","—","45+","55+"],
+                ["Operator NPS","—","50+","65+"],
+              ].map(([m,...vals],ri)=>(
+                <tr key={ri} style={{borderBottom:`1px solid ${C.border}`}}>
+                  <td style={{padding:"9px 12px",color:C.mut}}>{m}</td>
+                  {vals.map((v,vi)=>(
+                    <td key={vi} style={{padding:"9px 12px",textAlign:"center",fontWeight:600,color:[C.mut,C.blue,C.g][vi]}}>{v}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Partnerships(){
+  return(
+    <div>
+      <div style={{...S.card(),background:"#0a1e12",border:`1px solid ${C.borderHi}`,padding:"22px 28px",marginBottom:14}}>
+        <div style={{fontSize:11,color:C.g,letterSpacing:3,marginBottom:8}}>PARTNERSHIP PHILOSOPHY</div>
+        <div style={{fontSize:16,fontWeight:700,color:C.txt,lineHeight:1.45,marginBottom:10}}>
+          Don't build what a partner already built. <span style={{color:C.g}}>Integrate and dominate.</span>
+        </div>
+        <div style={{fontSize:13,color:C.mut,lineHeight:1.7}}>
+          SpotIn's competitive strength comes from sitting at the intersection of distribution (Google Maps, PhonePe), connectivity (Jio IoT), government mandate (Smart City), and real estate (malls, hospitals). Each partnership multiplies SpotIn's reach without multiplying its costs.
+        </div>
+      </div>
+
+      {partners.map((p,i)=>(
+        <div key={i} style={{...S.card(),borderLeft:`3px solid ${p.color}`,marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10,flexWrap:"wrap",gap:8}}>
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:C.txt,marginBottom:4}}>{p.name}</div>
+              <div style={{display:"flex",gap:6}}>
+                <Tag c={p.color}>{p.type}</Tag>
+                <Tag c={p.priority==="Critical"?C.red:p.priority==="Strategic"?C.amber:p.priority==="High"?C.g:C.mut}>{p.priority}</Tag>
+              </div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontSize:11,color:C.mut}}>Target timeline</div>
+              <div style={{fontSize:12,fontWeight:600,color:p.color}}>{p.timeline}</div>
+            </div>
+          </div>
+          <div style={S.g2}>
+            <div>
+              <div style={{fontSize:10,color:C.mut,letterSpacing:1,marginBottom:6}}>VALUE TO SPOTIN</div>
+              <div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>{p.value}</div>
+            </div>
+            <div>
+              <div style={{fontSize:10,color:C.mut,letterSpacing:1,marginBottom:6}}>HOW TO GET THERE</div>
+              <div style={{fontSize:12,color:C.mut,lineHeight:1.6}}>{p.how}</div>
+            </div>
+          </div>
+          <div style={{marginTop:8,background:C.surface,borderRadius:6,padding:"7px 12px"}}>
+            <span style={{fontSize:11,color:C.mut}}>Execution effort: </span>
+            <span style={{fontSize:11,color:p.color,fontWeight:600}}>{p.effort}</span>
+          </div>
+        </div>
+      ))}
+
+      <div style={S.card()}>
+        <div style={S.h2}>Partnership Sequencing — The Right Order Matters</div>
+        <div style={{fontSize:13,color:C.mut,lineHeight:1.7,marginBottom:16}}>
+          Partnership credibility compounds. A Jio IoT deal gives you enterprise credibility to close mall operators. Mall operator case studies unlock the BBMP smart city RFP. BBMP contract gets you into the Google Maps Local Services API partnership program. Sequence them wrong and each door stays shut.
+        </div>
+        <div style={{position:"relative",paddingLeft:24}}>
+          {[
+            {phase:"Month 1–3",act:"Jio/Airtel IoT SIM deal",why:"Operational need — sensors need connectivity. Easy commercial deal, no product integration.",c:C.g},
+            {phase:"Month 3–6",act:"Google Maps data partnership",why:"Distribution. Submit parking availability data to Maps. Start getting organic user acquisition.",c:C.lime},
+            {phase:"Month 6–9",act:"PhonePe/GPay mini-app",why:"Zero-CAC channel to 500M users. Requires traction data to get accepted.",c:C.blue},
+            {phase:"Month 6–12",act:"Top 10 mall operators (enterprise SaaS)",why:"Case studies + revenue. Unlocks credibility for govt deals.",c:C.amber},
+            {phase:"Month 9–18",act:"BBMP / BMC smart city contract",why:"Strategic moat. Requires existing operator traction + govt registration.",c:C.ora},
+            {phase:"Year 2–3",act:"OEM EV in-vehicle integration",why:"Long-term moat. Requires large user base to justify OEM's investment in integration.",c:C.purple},
+          ].map((s,i)=>(
+            <div key={i} style={{display:"flex",gap:14,paddingBottom:16,position:"relative"}}>
+              <div style={{position:"absolute",left:-24,top:4,width:10,height:10,borderRadius:"50%",background:s.c,border:`2px solid ${C.bg}`}}/>
+              {i<5&&<div style={{position:"absolute",left:-20,top:14,width:2,height:"100%",background:C.border}}/>}
+              <div style={{flex:1,background:C.card,border:`1px solid ${C.border}`,borderRadius:6,padding:"12px 16px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                  <span style={{fontSize:12,fontWeight:600,color:s.c}}>{s.act}</span>
+                  <span style={{fontSize:11,color:C.mut}}>{s.phase}</span>
+                </div>
+                <div style={{fontSize:12,color:C.mut}}>{s.why}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RiskMatrix(){
+  const scoreColor=(s)=>s>=7?C.red:s>=5?C.amber:C.g;
+  return(
+    <div>
+      <div style={S.card()}>
+        <div style={S.h2}>Risk Matrix (Likelihood × Impact, scored 1–3 each)</div>
+        <div style={{overflowX:"auto",marginBottom:12}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+            <thead>
+              <tr>{["Risk","Likelihood","Impact","Score","Mitigation Strategy"].map((h,i)=>(
+                <th key={i} style={{textAlign:i<4?"center":"left",padding:"8px 12px",color:C.mut,fontWeight:500,borderBottom:`1px solid ${C.border}`,whiteSpace:"nowrap"}}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {risks.sort((a,b)=>b.score-a.score).map((r,i)=>(
+                <tr key={i} style={{borderBottom:`1px solid ${C.border}`}}>
+                  <td style={{padding:"10px 12px",color:C.txt,fontWeight:600,minWidth:200}}>{r.risk}</td>
+                  <td style={{padding:"10px 12px",textAlign:"center"}}><Tag c={r.like==="High"?C.red:r.like==="Medium"?C.amber:C.g}>{r.like}</Tag></td>
+                  <td style={{padding:"10px 12px",textAlign:"center"}}><Tag c={r.impact==="High"?C.red:r.impact==="Medium"?C.amber:C.g}>{r.impact}</Tag></td>
+                  <td style={{padding:"10px 12px",textAlign:"center",fontWeight:700,fontSize:15,color:scoreColor(r.score)}}>{r.score}</td>
+                  <td style={{padding:"10px 12px",color:C.mut,fontSize:11,lineHeight:1.5,minWidth:320}}>{r.mit}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{display:"flex",gap:12}}>
+          {[["≥ 7","Critical — address before Series A",C.red],["5–6","Managed risk — mitigation plan required",C.amber],["≤ 4","Acceptable — monitor quarterly",C.g]].map(([s,l,c],i)=>(
+            <div key={i} style={{display:"flex",gap:8,alignItems:"center",fontSize:11,color:C.mut}}>
+              <span style={{width:10,height:10,borderRadius:2,background:c,display:"block"}}/>
+              <strong style={{color:c}}>{s}</strong> {l}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>Regulatory Landscape</div>
+        <div style={S.g2}>
+          <div>
+            <div style={S.h3}>Tailwinds (use these)</div>
+            {[
+              ["Smart City Mission","₹2.05L Cr allocated. 100+ cities mandated to implement digital parking by 2026–27."],
+              ["National Urban Mobility Policy","Explicitly calls for technology-led parking management in tier-1 and tier-2 cities."],
+              ["EV Policy (FAME III)","Mandate for EV charging infrastructure in all parking lots > 50 spots by 2026."],
+              ["Startup India + DPIIT","Tax exemption for 3 years + fast-track government empanelment for DPIIT-recognized startups."],
+              ["Digital India / UPI mandate","Govt pushing cashless parking payments. Aligns perfectly with SpotIn's model."],
+            ].map(([t,d],i)=>(
+              <div key={i} style={{display:"flex",gap:10,padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
+                <span style={{color:C.g,flexShrink:0,marginTop:1}}>✓</span>
+                <div>
+                  <div style={{fontSize:12,fontWeight:600,color:C.sub}}>{t}</div>
+                  <div style={{fontSize:11,color:C.mut,marginTop:2,lineHeight:1.5}}>{d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div>
+            <div style={S.h3}>Potential headwinds (prepare for)</div>
+            {[
+              ["State-level regulation variance","Parking pricing rules vary by state. Punjab caps parking rates; Maharashtra is deregulated. Build dynamic pricing controls per city-zone."],
+              ["Data localisation (DPDPA 2023)","India's data protection law requires user data stored locally. Already planned: AWS Mumbai region. Consent-based data collection for advertising."],
+              ["Municipal tender bureaucracy","Govt B2G sales cycles: 6–18 months. Parallel-track: private operators fast, govt slow. Don't depend on govt for Y1 revenue."],
+              ["Potential GST on parking tech","Parking services currently 18% GST. Operators pass through to consumers — not SpotIn's problem directly, but affects operator adoption speed."],
+            ].map(([t,d],i)=>(
+              <div key={i} style={{display:"flex",gap:10,padding:"8px 0",borderBottom:`1px solid ${C.border}`}}>
+                <span style={{color:C.amber,flexShrink:0,marginTop:1}}>⚠</span>
+                <div>
+                  <div style={{fontSize:12,fontWeight:600,color:C.sub}}>{t}</div>
+                  <div style={{fontSize:11,color:C.mut,marginTop:2,lineHeight:1.5}}>{d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={S.card()}>
+        <div style={S.h2}>Scenario Planning: What If Things Go Wrong?</div>
+        <div style={S.g3}>
+          {[
+            {scenario:"Bear Case",trigger:"Operator adoption 50% slower than model",outcome:"₹60Cr ARR by Y5 (vs ₹240Cr)",response:"Pivot harder to enterprise SaaS (malls/hospitals) which have shorter sales cycles. Data licensing becomes primary revenue faster.",c:C.red},
+            {scenario:"Base Case",trigger:"Model runs as projected",outcome:"₹240Cr ARR by Y5",response:"Execute phase expansion as planned. Raise Series B at Month 48. IPO track by Y7.",c:C.g},
+            {scenario:"Bull Case",trigger:"Govt fast-tracks smart city mandates + EV surge",outcome:"₹400–600Cr ARR by Y5",response:"Accelerate international expansion to SEA (Indonesia, Vietnam same problem). Raise Series B earlier. Consider strategic acquisition of a smaller competitor.",c:C.lime},
+          ].map((s,i)=>(
+            <div key={i} style={{...S.sc,borderTop:`3px solid ${s.c}`,padding:"16px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                <span style={{fontSize:13,fontWeight:700,color:s.c}}>{s.scenario}</span>
+                <Tag c={s.c}>{s.outcome}</Tag>
+              </div>
+              <div style={{fontSize:11,color:C.mut,marginBottom:8}}><strong style={{color:C.sub}}>Trigger:</strong> {s.trigger}</div>
+              <div style={{fontSize:11,color:C.mut,lineHeight:1.55}}><strong style={{color:C.sub}}>Response:</strong> {s.response}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{...S.card(),background:"#0a1e12",border:`1px solid ${C.borderHi}`,padding:"24px"}}>
+        <div style={S.h2}>The One-Page Summary For Investors</div>
+        <div style={S.g2}>
+          {[
+            {label:"The Problem",val:"300M Indian drivers waste ₹18,000Cr/year and 4.2 billion hours searching for parking. Zero real-time visibility, zero reservation infrastructure.",c:C.red},
+            {label:"The Solution",val:"SpotIn: IoT sensors + consumer app + operator SaaS = real-time parking intelligence layer for India's 14M unorganized spots.",c:C.blue},
+            {label:"Why Now",val:"IoT sensors at ₹800 (vs ₹8,000 in 2018) + Smart City mandate + 650M smartphones + UPI ubiquity = perfect timing.",c:C.lime},
+            {label:"Business Model",val:"Transaction fees (42%) + SaaS (26%) + hyperlocal ads (14%) + data licensing (9%). 6 revenue streams, 72% gross margin by Y5.",c:C.g},
+            {label:"Traction Target",val:"Bangalore pilot → 50 operators, 50K users, ₹25L/month GMV in 9 months → unlock pre-seed → then scale.",c:C.amber},
+            {label:"The Ask",val:"₹2Cr pre-seed at ₹15Cr post-money. 18-month runway. Proof of concept in 1 city, data room for Seed round.",c:C.purple},
+          ].map((item,i)=>(
+            <div key={i} style={{...S.sc,borderLeft:`3px solid ${item.c}`,padding:"14px 16px"}}>
+              <div style={{fontSize:10,color:item.c,letterSpacing:1.5,marginBottom:6,fontWeight:600}}>{item.label}</div>
+              <div style={{fontSize:12,color:C.sub,lineHeight:1.6}}>{item.val}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN ─────────────────────────────────────────────────────────────────────
+
+function SpotIn(){
+  const [tab,setTab]=useState(0);
+  const tabs=["Overview","Product","Biz Model","Market & GTM","Financials","Funding","90-Day Sprint","Partnerships","Risk Matrix"];
+
+  return(
+    <div style={S.page}>
+      <div style={S.hdr}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <div>
+            <span style={{fontSize:22,fontWeight:800,color:C.g,letterSpacing:-1}}>SPOT</span>
+            <span style={{fontSize:22,fontWeight:800,color:C.txt,letterSpacing:-1}}>IN</span>
+          </div>
+          <div style={{width:1,height:22,background:C.border}}/>
+          <div style={{fontSize:12,color:C.mut}}>Smart Parking Intelligence · India</div>
+        </div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          <Tag c={C.g}>₹240Cr Y5 ARR</Tag>
+          <Tag c={C.blue}>50 Cities</Tag>
+          <Tag c={C.amber}>EBITDA+ Y3</Tag>
+        </div>
+      </div>
+
+      <div style={S.nav}>
+        {tabs.map((t,i)=>(
+          <button key={i} onClick={()=>setTab(i)} style={{background:"none",border:"none",borderBottom:tab===i?`2px solid ${C.g}`:"2px solid transparent",color:tab===i?C.g:C.mut,padding:"11px 18px",cursor:"pointer",fontSize:11,fontFamily:"inherit",fontWeight:tab===i?600:400,letterSpacing:0.8,whiteSpace:"nowrap",transition:"color 0.2s"}}>
+            {t.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
+      <div style={S.body}>
+        {tab===0&&<Overview/>}
+        {tab===1&&<Product/>}
+        {tab===2&&<BusinessModel/>}
+        {tab===3&&<MarketGTM/>}
+        {tab===4&&<Financials/>}
+        {tab===5&&<Funding/>}
+        {tab===6&&<SprintPlan/>}
+        {tab===7&&<Partnerships/>}
+        {tab===8&&<RiskMatrix/>}
+      </div>
+    </div>
+  );
+}
+
+    /* ── Mount ────────────────────────────────────────────────────── */
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<SpotIn />);
+  </script>
+</body>
+</html>
