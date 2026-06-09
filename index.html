@@ -19,6 +19,135 @@
   <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
 </head>
 <body>
+  <!-- ═══════════ SPOTIN HERO SECTION ═══════════ -->
+<div id="hero" style="background:#060c09;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;font-family:ui-monospace,'Courier New',monospace;">
+  <div style="text-align:center;margin-bottom:44px;">
+    <div style="font-size:11px;color:#22c55e;letter-spacing:4px;margin-bottom:12px;">SMART PARKING INTELLIGENCE · INDIA</div>
+    <div style="font-size:70px;font-weight:800;letter-spacing:-3px;line-height:1;margin-bottom:14px;">
+      <span style="color:#22c55e">SPOT</span><span style="color:#ecfdf5">IN</span>
+    </div>
+    <div style="font-size:15px;color:#6b9e82;max-width:420px;margin:0 auto 28px;line-height:1.7;">
+      Real-time parking for 300M Indian drivers.<br/>Find your spot in under 30 seconds.
+    </div>
+    <button onclick="document.getElementById('root').scrollIntoView({behavior:'smooth'})"
+      style="background:#22c55e;color:#060c09;border:none;padding:13px 34px;font-size:13px;font-weight:700;border-radius:6px;cursor:pointer;letter-spacing:1.5px;font-family:inherit;"
+      onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">
+      VIEW FULL BUSINESS PLAN ↓
+    </button>
+  </div>
+  <canvas id="pkCanvas" width="700" height="360" style="border-radius:12px;max-width:100%;border:1px solid #1b3024;display:block;"></canvas>
+  <div style="display:flex;gap:44px;margin-top:36px;flex-wrap:wrap;justify-content:center;">
+    <div style="text-align:center;"><div style="font-size:26px;font-weight:700;color:#22c55e;">20 min</div><div style="font-size:10px;color:#6b9e82;letter-spacing:2px;text-transform:uppercase;margin-top:2px;">saved per driver</div></div>
+    <div style="text-align:center;"><div style="font-size:26px;font-weight:700;color:#22c55e;">14M+</div><div style="font-size:10px;color:#6b9e82;letter-spacing:2px;text-transform:uppercase;margin-top:2px;">parking spots</div></div>
+    <div style="text-align:center;"><div style="font-size:26px;font-weight:700;color:#22c55e;">50</div><div style="font-size:10px;color:#6b9e82;letter-spacing:2px;text-transform:uppercase;margin-top:2px;">cities targeted</div></div>
+    <div style="text-align:center;"><div style="font-size:26px;font-weight:700;color:#bef264;">₹240Cr</div><div style="font-size:10px;color:#6b9e82;letter-spacing:2px;text-transform:uppercase;margin-top:2px;">ARR year 5</div></div>
+  </div>
+</div>
+<script>
+(function(){
+  var cv=document.getElementById('pkCanvas');
+  if(!cv)return;
+  var cx=cv.getContext('2d');
+  var W=700,H=360,COLS=6,SW=80,SH=90,PX=50;
+  var R1Y=50,LY=140,LH=60,R2Y=200;
+  var INIT_R0=[1,0,1,1,0,1];
+  var INIT_R1=[1,1,0,0,1,1];
+  var INIT_C0=['#64748b',null,'#475569','#94a3b8',null,'#64748b'];
+  var INIT_C1=['#94a3b8','#64748b',null,null,'#475569','#94a3b8'];
+  var r0,r1,c0,c1;
+  function resetRows(){r0=INIT_R0.slice();r1=INIT_R1.slice();c0=INIT_C0.slice();c1=INIT_C1.slice();}
+  resetRows();
+  var pulses=[],eC=null,lC=null,phase='START',pTimer=0;
+  function ease(t){return t<.5?2*t*t:-1+(4-2*t)*t;}
+  function startCycle(){
+    resetRows();
+    var empties=[],occs=[];
+    for(var i=0;i<COLS;i++){if(r0[i]===0)empties.push(i);if(r1[i]===1)occs.push(i);}
+    var ec=empties[Math.floor(Math.random()*empties.length)];
+    var lc=occs[Math.floor(Math.random()*occs.length)];
+    eC={col:ec,x:PX+ec*SW+SW/2,y:-50,ty:R1Y+SH/2,p:0,done:false};
+    lC={col:lc,x:PX+lc*SW+SW/2,y:R2Y+SH/2,ty:H+60,p:0,done:false,started:false,dc:0,color:c1[lc]||'#94a3b8'};
+    phase='RUN';pTimer=0;
+  }
+  function update(){
+    pTimer++;
+    if(phase==='START'||phase==='WAIT'){if(pTimer>90)startCycle();return;}
+    if(phase!=='RUN')return;
+    if(eC&&!eC.done){
+      eC.p=Math.min(eC.p+0.013,1);
+      eC.y=-50+(eC.ty+50)*ease(eC.p);
+      if(eC.p>=1){eC.done=true;r0[eC.col]=1;c0[eC.col]='#e2e8f0';pulses.push({row:0,col:eC.col,t:0});}
+    }
+    if(lC&&!lC.started){lC.dc++;if(lC.dc>=45)lC.started=true;}
+    if(lC&&lC.started&&!lC.done){
+      lC.p=Math.min(lC.p+0.013,1);
+      lC.y=(R2Y+SH/2)+(lC.ty-(R2Y+SH/2))*ease(lC.p);
+      if(lC.p>=0.4&&r1[lC.col]===1){r1[lC.col]=0;c1[lC.col]=null;pulses.push({row:1,col:lC.col,t:0});}
+      if(lC.p>=1){lC.done=true;phase='WAIT';pTimer=0;}
+    }
+    for(var i=pulses.length-1;i>=0;i--){pulses[i].t+=0.025;if(pulses[i].t>1)pulses.splice(i,1);}
+  }
+  function drawBay(x,y,w,h,state,row,col){
+    cx.fillStyle=state?'#0f1a10':'#0a1e14';cx.fillRect(x,y,w,h);
+    cx.strokeStyle=state?'#243320':'#1e3a2a';cx.lineWidth=1.5;cx.strokeRect(x+1,y+1,w-2,h-2);
+    cx.strokeStyle='#172a20';cx.lineWidth=1;cx.setLineDash([3,5]);
+    cx.beginPath();cx.moveTo(x+w/2,y+4);cx.lineTo(x+w/2,y+h-4);cx.stroke();cx.setLineDash([]);
+    var sx=x+w/2,sy=row===0?y+16:y+h-16,sc=state?'#fbbf24':'#22c55e';
+    var g=cx.createRadialGradient(sx,sy,0,sx,sy,14);
+    g.addColorStop(0,sc+'55');g.addColorStop(1,sc+'00');
+    cx.fillStyle=g;cx.beginPath();cx.arc(sx,sy,14,0,Math.PI*2);cx.fill();
+    cx.fillStyle=sc;cx.beginPath();cx.arc(sx,sy,5,0,Math.PI*2);cx.fill();
+    pulses.forEach(function(p){
+      if(p.row===row&&p.col===col){
+        var a=Math.floor((1-p.t)*200).toString(16).padStart(2,'0');
+        cx.strokeStyle=sc+a;cx.lineWidth=2;cx.beginPath();cx.arc(sx,sy,5+p.t*20,0,Math.PI*2);cx.stroke();
+      }
+    });
+    cx.fillStyle='#1a3028';cx.font='9px monospace';cx.textAlign='center';
+    cx.fillText('P'+(row*COLS+col+1),x+w/2,row===0?y+h-5:y+10);
+  }
+  function drawCar(x,y,color,hl){
+    var cw=30,ch=52;
+    cx.fillStyle=color;cx.beginPath();
+    if(cx.roundRect)cx.roundRect(x-cw/2,y-ch/2,cw,ch,4);else cx.rect(x-cw/2,y-ch/2,cw,ch);
+    cx.fill();
+    cx.fillStyle='#081510';cx.fillRect(x-cw/2+4,y-ch/2+8,cw-8,ch*0.28);
+    if(hl){cx.fillStyle='#fef08a';cx.fillRect(x-cw/2+3,y-ch/2+3,7,3);cx.fillRect(x+cw/2-10,y-ch/2+3,7,3);}
+    cx.fillStyle='#ef4444';cx.fillRect(x-cw/2+3,y+ch/2-6,7,3);cx.fillRect(x+cw/2-10,y+ch/2-6,7,3);
+  }
+  function draw(){
+    cx.fillStyle='#0a1510';cx.fillRect(0,0,W,H);
+    cx.fillStyle='#0c1a14';cx.fillRect(0,0,W,R1Y);
+    cx.fillStyle='#0c1a14';cx.fillRect(0,LY,W,LH);
+    cx.fillStyle='#0c1a14';cx.fillRect(0,R2Y+SH,W,H-(R2Y+SH));
+    cx.strokeStyle='#fbbf2428';cx.lineWidth=1.5;cx.setLineDash([8,6]);
+    cx.beginPath();cx.moveTo(PX,LY+LH/2);cx.lineTo(PX+COLS*SW,LY+LH/2);cx.stroke();cx.setLineDash([]);
+    if(eC){
+      cx.fillStyle='#22c55e0f';cx.fillRect(PX+eC.col*SW,0,SW,R1Y);
+      cx.fillStyle='#22c55e66';cx.font='bold 10px monospace';cx.textAlign='center';
+      cx.fillText('▼ ENTRY',PX+eC.col*SW+SW/2,14);
+    }
+    if(lC&&lC.started){
+      cx.fillStyle='#f871410f';cx.fillRect(PX+lC.col*SW,R2Y+SH,SW,H-(R2Y+SH));
+      cx.fillStyle='#f8714166';cx.font='bold 10px monospace';cx.textAlign='center';
+      cx.fillText('▼ EXIT',PX+lC.col*SW+SW/2,H-8);
+    }
+    for(var i=0;i<COLS;i++){
+      drawBay(PX+i*SW,R1Y,SW,SH,r0[i],0,i);
+      drawBay(PX+i*SW,R2Y,SW,SH,r1[i],1,i);
+    }
+    for(var j=0;j<COLS;j++){
+      if(r0[j]===1&&!(eC&&j===eC.col&&!eC.done))drawCar(PX+j*SW+SW/2,R1Y+SH/2,c0[j]||'#64748b',false);
+      if(r1[j]===1&&!(lC&&j===lC.col&&lC.started&&!lC.done))drawCar(PX+j*SW+SW/2,R2Y+SH/2,c1[j]||'#64748b',false);
+    }
+    if(eC&&!eC.done)drawCar(eC.x,eC.y,'#e2e8f0',true);
+    if(lC&&lC.started&&!lC.done)drawCar(lC.x,lC.y,lC.color,true);
+  }
+  function loop(){update();draw();requestAnimationFrame(loop);}
+  startCycle();loop();
+})();
+</script>
+<!-- ═══════════ END HERO SECTION ═══════════ -->
   <div id="root"></div>
 
   <script type="text/babel">
