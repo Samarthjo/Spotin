@@ -17,8 +17,61 @@
   <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js" crossorigin></script>
   <!-- Babel (JSX transform in browser) -->
   <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
+
+  <style id="spotin-theme-styles">
+    :root{color-scheme:dark}
+    html.spotin-light{color-scheme:light;background:#f4f8f5}
+    #spotinThemeToggle{
+      position:fixed;top:16px;right:16px;z-index:2147483647;
+      display:inline-flex;align-items:center;justify-content:center;gap:7px;
+      min-width:94px;height:38px;padding:0 13px;border-radius:999px;
+      border:1px solid #2d4a39;background:rgba(6,12,9,.92);color:#ecfdf5;
+      box-shadow:0 8px 28px rgba(0,0,0,.28);backdrop-filter:blur(12px);
+      font:700 12px/1 ui-monospace,'Courier New',monospace;letter-spacing:.4px;
+      cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease;
+    }
+    #spotinThemeToggle:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(0,0,0,.32)}
+    #spotinThemeToggle:focus-visible{outline:2px solid #22c55e;outline-offset:3px}
+    html.spotin-light body{background:#f4f8f5!important}
+    html.spotin-light #spotinThemeToggle{
+      background:rgba(255,255,255,.94);color:#0b2217;border-color:#bdd8c7;
+      box-shadow:0 8px 28px rgba(31,67,47,.15);
+    }
+    #hero,#appDemo,#root{transition:filter .25s ease}
+    html.spotin-light #hero,
+    html.spotin-light #appDemo,
+    html.spotin-light #root{filter:invert(.93) hue-rotate(180deg)}
+    @media(max-width:640px){#spotinThemeToggle{top:10px;right:10px;min-width:86px;height:34px;font-size:11px}}
+    @media(prefers-reduced-motion:reduce){#spotinThemeToggle,#hero,#appDemo,#root{transition:none!important}}
+  </style>
 </head>
 <body>
+
+<button id="spotinThemeToggle" type="button" aria-label="Switch color theme" aria-pressed="false">☀ Light</button>
+<script id="spotin-theme-script">
+(function(){
+  var KEY='spotin-theme';
+  var root=document.documentElement;
+  var btn=document.getElementById('spotinThemeToggle');
+  if(!btn)return;
+  function apply(mode,persist){
+    var light=mode==='light';
+    root.classList.toggle('spotin-light',light);
+    btn.setAttribute('aria-pressed',light?'true':'false');
+    btn.textContent=light?'☾ Dark':'☀ Light';
+    btn.setAttribute('aria-label',light?'Switch to dark mode':'Switch to light mode');
+    if(persist){try{localStorage.setItem(KEY,mode);}catch(_){}}
+  }
+  var saved=null;
+  try{saved=localStorage.getItem(KEY);}catch(_){}
+  var preferred='dark';
+  try{preferred=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}catch(_){}
+  apply(saved||preferred,false);
+  btn.addEventListener('click',function(){
+    apply(root.classList.contains('spotin-light')?'dark':'light',true);
+  });
+})();
+</script>
   <!-- ═══════════ SPOTIN HERO v2 ═══════════ -->
 <div id="hero" style="background:#060c09;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;font-family:ui-monospace,'Courier New',monospace;overflow:hidden;">
   <div style="position:relative;z-index:1;width:100%;max-width:800px;">
