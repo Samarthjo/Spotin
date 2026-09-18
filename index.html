@@ -1752,5 +1752,47 @@ function SpotIn(){
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<SpotIn />);
   </script>
+
+<!-- SPOTIN_SUPABASE_ANALYTICS -->
+<script>
+(function(){
+  const SB_URL = "https://qmjwruonybpjoicakckx.supabase.co";
+  const SB_KEY = "sb_publishable_x0AYqDg4ytLbvK2QUWxP_g_KH1g6iPr";
+  function track(eventType, metadata) {
+    try {
+      fetch(SB_URL + "/rest/v1/spotin_events", {
+        method: "POST",
+        headers: {
+          "apikey": SB_KEY,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        body: JSON.stringify({
+          event_type: eventType,
+          path: location.pathname,
+          metadata: metadata || {}
+        }),
+        keepalive: true
+      }).catch(function(){});
+    } catch (_) {}
+  }
+  window.SpotInTrack = track;
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function(){
+      track("page_view", {referrer: document.referrer || null, viewport: innerWidth + "x" + innerHeight});
+    }, {once:true});
+  } else {
+    track("page_view", {referrer: document.referrer || null, viewport: innerWidth + "x" + innerHeight});
+  }
+  document.addEventListener("click", function(e){
+    const el = e.target && e.target.closest ? e.target.closest("button,a,canvas") : null;
+    if (!el) return;
+    const label = (el.innerText || el.getAttribute("aria-label") || el.id || el.tagName || "").trim().slice(0,80);
+    if (/VIEW BUSINESS PLAN/i.test(label)) track("view_business_plan", {label: label});
+    else if (el.id === "pkCv" || /reserve|book|spot|demo|map/i.test(label)) track("demo_interaction", {label: label || el.id});
+  }, {passive:true});
+})();
+</script>
+
 </body>
 </html>
